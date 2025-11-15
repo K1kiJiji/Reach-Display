@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "reach-display",
+  "version": "${version}",
+  "name": "Reach Display",
+  "description": "Display Player's Hit Distance",
+  "authors": ["KikiJiji"],
+  "license": "MIT",
+  "icon": "assets/reach-display/icon.png",
+  "environment": "client",
+  "entrypoints":
+  {
+    "client":  ["kikijiji.reachdisplay.ReachDisplay"],
+    "modmenu": ["kikijiji.reachdisplay.modmenu.ReachDisplayModMenu"]
+  },
+  "depends":
+  {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests":
+  {
+    "modmenu": "*"
+  }
+}
