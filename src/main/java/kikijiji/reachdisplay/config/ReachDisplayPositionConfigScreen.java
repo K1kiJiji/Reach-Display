@@ -85,52 +85,66 @@ public class ReachDisplayPositionConfigScreen extends Screen
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta)
     {
         this.renderBackground(ctx, mouseX, mouseY, delta);
-
         MinecraftClient client = MinecraftClient.getInstance();
+
+        // 하단 버튼
+        super.render(ctx, mouseX, mouseY, delta);
+
+        // 안내 텍스트
+        ctx.drawCenteredTextWithShadow(
+                this.textRenderer,
+                Text.literal("Position Preview"),
+                this.width / 2,
+                20,
+                0xFFFFFF
+        );
+
         if (client != null && ReachDisplay.CONFIG != null)
         {
             String text = "2.88 blocks";
-            ReachDisplayConfig cfg = this.config;
+            ReachDisplayConfig config = this.config;
 
-            int w = this.textRenderer.getWidth(text);
-            int h = this.textRenderer.fontHeight;
-            int pad = cfg.showBackground ? 2 : 0;
+            int w   = this.textRenderer.getWidth(text);
+            int h   = this.textRenderer.fontHeight;
+            int pad = config.showBackground ? 2 : 0;
 
-            int hudW = w + pad * 2;
-            int hudH = h + pad * 2;
+            float scale = Math.max(0.1f, config.scale / 100.0f);
 
-            int baseX = tempOffsetX;
-            int baseY = tempOffsetY;
+            int anchorX = 4 + tempOffsetX;
+            int anchorY = 4 + tempOffsetY;
 
-            int maxX = this.width  - hudW;
-            int maxY = this.height - hudH - 40;
+            var matrices = ctx.getMatrices();
+            matrices.push();
 
-            if (maxX < 0) maxX = 0;
-            if (maxY < 0) maxY = 0;
+            matrices.translate(anchorX, anchorY, 0);
+            matrices.scale(scale, scale, 1.0f);
 
-            baseX = Math.max(0, Math.min(baseX, maxX));
-            baseY = Math.max(0, Math.min(baseY, maxY));
-
-            tempOffsetX = baseX;
-            tempOffsetY = baseY;
+            int x = 0;
+            int y = 0;
 
             // 배경 박스
-            if (cfg.showBackground)
+            if (config.showBackground)
             {
-                ctx.fill(baseX, baseY, baseX + hudW, baseY + hudH, cfg.backgroundColor);
+                int x1 = x - pad;
+                int y1 = y - pad;
+                int x2 = x + w + pad;
+                int y2 = y + h + pad;
+                ctx.fill(x1, y1, x2, y2, config.backgroundColor);
             }
 
             // 그림자
-            if (cfg.showShadow)
+            if (config.showShadow)
             {
-                ctx.drawText(this.textRenderer, text, baseX + pad + 1, baseY + pad + 1, cfg.shadowColor, false);
+                ctx.drawText(this.textRenderer, text, x + 1, y + 1, config.shadowColor, false);
             }
 
             // 메인 텍스트
-            if (cfg.showReach)
+            if (config.showReach)
             {
-                ctx.drawText(this.textRenderer, text, baseX + pad, baseY + pad, cfg.mainColor, false);
+                ctx.drawText(this.textRenderer, text, x, y, config.mainColor, false);
             }
+
+            matrices.pop();
         }
     }
 
@@ -140,17 +154,22 @@ public class ReachDisplayPositionConfigScreen extends Screen
         if (button == 0)
         {
             String text = "2.88 blocks";
-            ReachDisplayConfig config = this.config;
-            int w = this.textRenderer.getWidth(text);
-            int h = this.textRenderer.fontHeight;
-            int pad = config.showBackground ? 2 : 0;
+            ReachDisplayConfig cfg = this.config;
+            int w   = this.textRenderer.getWidth(text);
+            int h   = this.textRenderer.fontHeight;
+            int pad = cfg.showBackground ? 2 : 0;
+
             int hudW = w + pad * 2;
             int hudH = h + pad * 2;
 
-            int baseX = tempOffsetX;
-            int baseY = tempOffsetY;
+            float scale = Math.max(0.1f, cfg.scale / 100.0f);
+            int scaledW = (int)Math.ceil(hudW * scale);
+            int scaledH = (int)Math.ceil(hudH * scale);
 
-            boolean inside = mouseX >= baseX && mouseX < baseX + hudW && mouseY >= baseY && mouseY < baseY + hudH;
+            int anchorX = 4 + tempOffsetX;
+            int anchorY = 4 + tempOffsetY;
+
+            boolean inside = mouseX >= anchorX && mouseX < anchorX + scaledW && mouseY >= anchorY && mouseY < anchorY + scaledH;
 
             if (inside)
             {
@@ -171,25 +190,42 @@ public class ReachDisplayPositionConfigScreen extends Screen
     {
         if (dragging && button == 0)
         {
-            int rawX = startOffsetX + (int)(mouseX - dragStartX);
-            int rawY = startOffsetY + (int)(mouseY - dragStartY);
+            int rawOffsetX = startOffsetX + (int)(mouseX - dragStartX);
+            int rawOffsetY = startOffsetY + (int)(mouseY - dragStartY);
 
+            ReachDisplayConfig cfg = this.config;
             String text = "2.88 blocks";
-            ReachDisplayConfig config = this.config;
-            int w = this.textRenderer.getWidth(text);
-            int h = this.textRenderer.fontHeight;
-            int pad = config.showBackground ? 2 : 0;
+            int w   = this.textRenderer.getWidth(text);
+            int h   = this.textRenderer.fontHeight;
+            int pad = cfg.showBackground ? 2 : 0;
+
             int hudW = w + pad * 2;
             int hudH = h + pad * 2;
 
-            int maxX = this.width  - hudW;
-            int maxY = this.height - hudH - 40;
+            float scale = Math.max(0.1f, cfg.scale / 100.0f);
+            int scaledW = (int) Math.ceil(hudW * scale);
+            int scaledH = (int) Math.ceil(hudH * scale);
 
-            if (maxX < 0) maxX = 0;
-            if (maxY < 0) maxY = 0;
+            int anchorX = 4 + rawOffsetX;
+            int anchorY = 4 + rawOffsetY;
 
-            tempOffsetX = Math.max(0, Math.min(rawX, maxX));
-            tempOffsetY = Math.max(0, Math.min(rawY, maxY));
+            int leftMargin   = 0;
+            int rightMargin  = 0;
+            int topMargin    = 0;
+            int bottomMargin = 0;
+
+            int maxX = this.width  - scaledW - rightMargin;
+            int maxY = this.height - scaledH - bottomMargin;
+
+            if (maxX < 4) maxX = leftMargin;
+            if (maxY < 4) maxY = topMargin;
+
+            anchorX = Math.max(4, Math.min(anchorX, maxX));
+            anchorY = Math.max(4, Math.min(anchorY, maxY));
+
+            tempOffsetX = anchorX - 4;
+            tempOffsetY = anchorY - 4;
+
             return true;
         }
 

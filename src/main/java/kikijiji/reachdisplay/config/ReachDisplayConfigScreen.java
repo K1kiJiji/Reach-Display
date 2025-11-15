@@ -336,6 +336,7 @@ public class ReachDisplayConfigScreen extends Screen
                     0xFF888888,
                     false
             );
+
             return;
         }
 
@@ -345,9 +346,9 @@ public class ReachDisplayConfigScreen extends Screen
         matrices.push();
 
         int centerXHud = rightInnerX + previewW / 2;
-        int centerYHud = previewY + previewH / 2;
-        matrices.translate(centerXHud, centerYHud, 0);
+        int centerYHud = previewY   + previewH / 2;
 
+        matrices.translate(centerXHud, centerYHud, 0);
         matrices.scale(scale, scale, 1.0f);
 
         int x = -textWidth / 2;

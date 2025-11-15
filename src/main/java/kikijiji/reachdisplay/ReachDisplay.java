@@ -5,7 +5,6 @@ import java.text.DecimalFormat;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.util.Window;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
@@ -15,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registries;
 import kikijiji.reachdisplay.config.ReachDisplayConfig;
 import kikijiji.reachdisplay.config.ReachDisplayConfigManager;
+import kikijiji.reachdisplay.config.ReachDisplayPositionConfigScreen;
 
 
 public class ReachDisplay implements ClientModInitializer
@@ -86,6 +86,11 @@ public class ReachDisplay implements ClientModInitializer
             return;
         }
 
+        if (client.currentScreen instanceof ReachDisplayPositionConfigScreen)
+        {
+            return;
+        }
+
         // 표시 유지 방식
         ReachDisplayConfig config = CONFIG;
 
@@ -119,13 +124,6 @@ public class ReachDisplay implements ClientModInitializer
             case WITH_M ->      numberText + " M";
         };
 
-        Window window = client.getWindow();
-        int scaledWidth = window.getScaledWidth();
-        int scaledHeight = window.getScaledHeight();
-
-        int baseX = scaledWidth / 2 + config.offsetX;
-        int baseY = scaledHeight / 2 + config.offsetY;
-
         int textWidth  = client.textRenderer.getWidth(text);
         int textHeight = client.textRenderer.fontHeight;
 
@@ -136,18 +134,21 @@ public class ReachDisplay implements ClientModInitializer
             return;
         }
 
+        int anchorX = 4 + config.offsetX;
+        int anchorY = 4 + config.offsetY;
+
         var matrices = drawContext.getMatrices();
         matrices.push();
-        matrices.translate(baseX, baseY, 0);
+        matrices.translate(anchorX, anchorY, 0);
         matrices.scale(scale, scale, 1.0f);
-
-        int x = -textWidth  / 2;
-        int y = -textHeight / 2;
 
         // 거리별 색상
         int mainColor       = config.mainColor;
         int shadowColor     = config.shadowColor;
         int backgroundColor = config.backgroundColor;
+
+        int x = 0;
+        int y = 0;
 
         if (config.enableDistanceColor && !config.distanceBands.isEmpty())
         {
