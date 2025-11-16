@@ -31,7 +31,7 @@ public class ReachDisplayConfig
 
 
     // 거리별 색상
-    public boolean enableDistanceColor = true;
+    public boolean enableDistanceColor = false;
     public List<DistanceColorBand> distanceBands = new ArrayList<>();
 
     public static class DistanceColorBand

@@ -91,7 +91,8 @@ public class ReachDisplayPositionConfigScreen extends Screen
         super.render(ctx, mouseX, mouseY, delta);
 
         // 안내 텍스트
-        ctx.drawCenteredTextWithShadow(
+        ctx.drawCenteredTextWithShadow
+        (
                 this.textRenderer,
                 Text.literal("Position Preview"),
                 this.width / 2,

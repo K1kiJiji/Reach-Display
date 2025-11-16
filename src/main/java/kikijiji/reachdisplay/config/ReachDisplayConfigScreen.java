@@ -45,6 +45,15 @@ public class ReachDisplayConfigScreen extends Screen
 
     private ButtonWidget positionToggle;
 
+    private ButtonWidget mainColorButton;
+    private ButtonWidget mainColorReset;
+
+    private ButtonWidget shadowColorButton;
+    private ButtonWidget shadowColorReset;
+
+    private ButtonWidget backgroundColorButton;
+    private ButtonWidget backgroundColorReset;
+
 
     private final int startY = 30;
 
@@ -191,6 +200,7 @@ public class ReachDisplayConfigScreen extends Screen
 
                     updateEnableStates();
                 }
+
         ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
         scaleReset = this.addDrawableChild(ButtonWidget.builder
         (
@@ -202,6 +212,7 @@ public class ReachDisplayConfigScreen extends Screen
                     scaleEditBuffer = Integer.toString(defaultConfig.scale);
                     updateEnableStates();
                 }
+
         ).dimensions(resetX, y, 20, buttonHeight).build());
         y += 25;
 
@@ -214,6 +225,91 @@ public class ReachDisplayConfigScreen extends Screen
                 }
 
         ).dimensions(x - 10, y, fullButtonWidth, buttonHeight).build());
+        y += 45;
+
+        // 색
+        mainColorButton = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    MinecraftClient.getInstance().setScreen
+                    (
+                            new ColorPickerScreen(this, workingConfig.mainColor, newColor ->
+                            {
+                                workingConfig.mainColor = newColor;
+                                this.init();
+                            })
+                    );
+                }
+
+        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
+        mainColorReset = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.mainColor = defaultConfig.mainColor;
+                    this.init();
+                }
+
+        ).dimensions(resetX, y, 20, buttonHeight).build());
+        y += 25;
+
+        shadowColorButton = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    MinecraftClient.getInstance().setScreen
+                    (
+                            new ColorPickerScreen(this, workingConfig.shadowColor, newColor ->
+                            {
+                                workingConfig.shadowColor = newColor;
+                                this.init();
+                            })
+                    );
+                }
+
+        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
+        shadowColorReset = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.shadowColor = defaultConfig.shadowColor;
+                    this.init();
+                }
+
+        ).dimensions(resetX, y, 20, buttonHeight).build());
+        y += 25;
+
+        backgroundColorButton = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    MinecraftClient.getInstance().setScreen
+                    (
+                            new ColorPickerScreen(this, workingConfig.backgroundColor, newColor ->
+                            {
+                                workingConfig.backgroundColor = newColor;
+                                this.init();
+                            })
+                    );
+                }
+
+        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
+        backgroundColorReset = this.addDrawableChild(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.backgroundColor = defaultConfig.backgroundColor;
+                    this.init();
+                }
+
+        ).dimensions(resetX, y, 20, buttonHeight).build());
         y += 25;
 
 
@@ -394,6 +490,30 @@ public class ReachDisplayConfigScreen extends Screen
     }
 
 
+    private void drawColorRow(DrawContext ctx, ButtonWidget colorButton, ButtonWidget resetButton, String label, int argb)
+    {
+
+        int bx = colorButton.getX();
+        int by = colorButton.getY();
+        int bw = colorButton.getWidth();
+        int bh = colorButton.getHeight();
+
+        int labelY = by + (bh - this.textRenderer.fontHeight) / 2;
+        ctx.drawText
+        (
+                this.textRenderer,
+                Text.literal(label),
+                bx + 4,
+                labelY,
+                0xFFFFFFFF,
+                false
+        );
+
+        ctx.fill(bx + bw - 16, by + 4, bx + bw - 4, by + bh - 4, 0xFF000000);
+        ctx.fill(bx + bw - 15, by + 5, bx + bw - 5, by + bh - 5, argb);
+    }
+
+
     /* ----- 렌더 ----- */
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta)
@@ -405,6 +525,8 @@ public class ReachDisplayConfigScreen extends Screen
 
         // 배경
         this.renderBackground(ctx, mouseX, mouseY, delta);
+
+        ctx.fill(leftWidth, this.height, this.width, 45, 0x80000000);
 
         // 버튼
         super.render(ctx, mouseX, mouseY, delta);
@@ -551,7 +673,7 @@ public class ReachDisplayConfigScreen extends Screen
 
             String label = "Text Background";
 
-            float alpha = shadowToggle.active ? 1.0f : 0.4f;
+            float alpha = backGroundToggle.active ? 1.0f : 0.4f;
             int base = 0xFFFFFF;
 
             int a = (int)(alpha * 255.0f) & 0xFF;
@@ -718,6 +840,102 @@ public class ReachDisplayConfigScreen extends Screen
                     false
             );
         }
+        if (mainColorButton != null)
+        {
+            drawColorRow(ctx, mainColorButton, mainColorReset, "Main Color", workingConfig.mainColor);
+        }
+        if (mainColorReset != null)
+        {
+            int bx = mainColorReset.getX();
+            int by = mainColorReset.getY();
+            int bw = mainColorReset.getWidth();
+            int bh = mainColorReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = bx + (bw - iconSize) / 2;
+            int iconY = by + (bh - iconSize) / 2;
+
+            float alpha = mainColorReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
+        if (shadowColorButton != null)
+        {
+            drawColorRow(ctx, shadowColorButton, shadowColorReset, "Shadow Color", workingConfig.shadowColor);
+        }
+        if (shadowColorReset != null)
+        {
+            int bx = shadowColorReset.getX();
+            int by = shadowColorReset.getY();
+            int bw = shadowColorReset.getWidth();
+            int bh = shadowColorReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = bx + (bw - iconSize) / 2;
+            int iconY = by + (bh - iconSize) / 2;
+
+            float alpha = shadowColorReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
+        if (backgroundColorButton != null)
+        {
+            drawColorRow(ctx, backgroundColorButton, backgroundColorReset, "Background Color", workingConfig.backgroundColor);
+        }
+        if (backgroundColorReset != null)
+        {
+            int bx = backgroundColorReset.getX();
+            int by = backgroundColorReset.getY();
+            int bw = backgroundColorReset.getWidth();
+            int bh = backgroundColorReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = bx + (bw - iconSize) / 2;
+            int iconY = by + (bh - iconSize) / 2;
+
+            float alpha = backgroundColorReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
 
 
         // 제목
@@ -741,11 +959,15 @@ public class ReachDisplayConfigScreen extends Screen
         // 헤더 텍스트
         ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 25, 0xFFFFFF, true);
         ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 25, 0xFFFFFF, true);
-        ctx.drawText(this.textRenderer, Text.literal("Appearance"), leftCenterX, startY + 25, 0xFFFFFF, true);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Appearance"), leftCenterX, startY + 25, 0xFFFFFF);
 
         ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 125, 0xFFFFFF, true);
         ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 125, 0xFFFFFF, true);
-        ctx.drawText(this.textRenderer, Text.literal("transform"), leftCenterX, startY + 125, 0xFFFFFF, true);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Transform"), leftCenterX, startY + 125, 0xFFFFFF);
+
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 195, 0xFFFFFF, true);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 195, 0xFFFFFF, true);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Color"), leftCenterX, startY + 195, 0xFFFFFF);
     }
 
 
@@ -801,7 +1023,7 @@ public class ReachDisplayConfigScreen extends Screen
         reachToggle.setAlpha(1.0f);
 
         // Reach 검사
-        boolean reachDefault = workingConfig.showReach == defaultConfig.showReach && workingConfig.mainColor == defaultConfig.mainColor;
+        boolean reachDefault = workingConfig.showReach == defaultConfig.showReach;
         if (reachReset != null)
         {
             reachReset.active = !reachDefault;
@@ -821,7 +1043,7 @@ public class ReachDisplayConfigScreen extends Screen
         }
 
         // Shadow 검사
-        boolean shadowDefault = workingConfig.showShadow == defaultConfig.showShadow && workingConfig.shadowColor == defaultConfig.shadowColor;
+        boolean shadowDefault = workingConfig.showShadow == defaultConfig.showShadow;
         if (shadowReset != null)
         {
             boolean canUse = reachEnabled && !shadowDefault;
@@ -830,20 +1052,44 @@ public class ReachDisplayConfigScreen extends Screen
         }
 
         // Background 검사
-        boolean bgDefault = workingConfig.showBackground == defaultConfig.showBackground && workingConfig.backgroundColor == defaultConfig.backgroundColor;
+        boolean backgroundDefault = workingConfig.showBackground == defaultConfig.showBackground;
         if (backGroundReset != null)
         {
-            boolean canUse = reachEnabled && !bgDefault;
+            boolean canUse = reachEnabled && !backgroundDefault;
             backGroundReset.active = canUse;
             backGroundReset.setAlpha(canUse ? 1.0f : 0.4f);
         }
 
         // Scale 검사
-        boolean scaleDefault = (workingConfig.scale == defaultConfig.scale);
+        boolean scaleDefault = workingConfig.scale == defaultConfig.scale;
         if (scaleReset != null)
         {
             scaleReset.active = !scaleDefault;
             scaleReset.setAlpha(scaleDefault ? 0.4f : 1.0f);
+        }
+
+        // Main color 검사
+        boolean mainColorDefault = (workingConfig.mainColor == defaultConfig.mainColor);
+        if (mainColorReset != null)
+        {
+            mainColorReset.active = !mainColorDefault;
+            mainColorReset.setAlpha(mainColorDefault ? 0.4f : 1.0f);
+        }
+
+        // Shadow color 검사
+        boolean shadowColorDefault = (workingConfig.shadowColor == defaultConfig.shadowColor);
+        if (shadowColorReset != null)
+        {
+            shadowColorReset.active = !shadowColorDefault;
+            shadowColorReset.setAlpha(shadowColorDefault ? 0.4f : 1.0f);
+        }
+
+        // Background color 검사
+        boolean bgColorDefault = (workingConfig.backgroundColor == defaultConfig.backgroundColor);
+        if (backgroundColorReset != null)
+        {
+            backgroundColorReset.active = !bgColorDefault;
+            backgroundColorReset.setAlpha(bgColorDefault ? 0.4f : 1.0f);
         }
     }
 
