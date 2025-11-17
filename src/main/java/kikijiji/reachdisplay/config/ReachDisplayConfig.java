@@ -75,7 +75,7 @@ public class ReachDisplayConfig
 
 
     // 표시 유지 방식
-    public boolean keepLastDistance = true;
+    public boolean keepLastHitDistance = true;
     public double resetAfterSeconds = 15.0;
 
 

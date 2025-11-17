@@ -8,8 +8,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registries;
 import kikijiji.reachdisplay.config.ReachDisplayConfig;
@@ -22,7 +25,7 @@ public class ReachDisplay implements ClientModInitializer
     public static final String MOD_ID = "reach-display";
     public static ReachDisplayConfig CONFIG;
 
-    private static double lastDistance = 0.0;
+    private static double lastHitDistance = 0.0;
     private static long lastHitTime    = 0;
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
@@ -45,13 +48,38 @@ public class ReachDisplay implements ClientModInitializer
                 return ActionResult.PASS;
             }
 
-            lastDistance = Math.sqrt(player.squaredDistanceTo(entity));
-            lastHitTime  = System.currentTimeMillis();
+            MinecraftClient client = MinecraftClient.getInstance();
+
+            lastHitDistance = computeHitDistance(client, entity);
+            lastHitTime = System.currentTimeMillis();
 
             return ActionResult.PASS;
         });
 
         HudRenderCallback.EVENT.register(ReachDisplay::renderHud);
+    }
+
+
+    private static double computeHitDistance(MinecraftClient client, Entity target)
+    {
+        var player = client.player;
+        if (player == null || target == null)
+        {
+            return 0.0;
+        }
+
+        Vec3d eyePosition = player.getCameraPosVec(1.0F);
+        Box hitBox = target.getBoundingBox();
+
+        double clampedX = MathHelper.clamp(eyePosition.x, hitBox.minX, hitBox.maxX);
+        double clampedY = MathHelper.clamp(eyePosition.y, hitBox.minY, hitBox.maxY);
+        double clampedZ = MathHelper.clamp(eyePosition.z, hitBox.minZ, hitBox.maxZ);
+
+        double dx = clampedX - eyePosition.x;
+        double dy = clampedY - eyePosition.y;
+        double dz = clampedZ - eyePosition.z;
+
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
 
@@ -100,8 +128,8 @@ public class ReachDisplay implements ClientModInitializer
         }
 
         long now = System.currentTimeMillis();
-        double reachDisplay = lastDistance;
-        if (!config.keepLastDistance && lastHitTime > 0)
+        double reachDisplay = lastHitDistance;
+        if (!config.keepLastHitDistance && lastHitTime > 0)
         {
             double elapsedSeconds = (now - lastHitTime) / 1000.0;
             if (elapsedSeconds > config.resetAfterSeconds)

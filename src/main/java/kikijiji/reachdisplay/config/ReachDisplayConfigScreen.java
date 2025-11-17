@@ -358,7 +358,7 @@ public class ReachDisplayConfigScreen extends Screen
                 Text.literal(""),
                 buttonWidget ->
                 {
-                    workingConfig.keepLastDistance = !workingConfig.keepLastDistance;
+                    workingConfig.keepLastHitDistance = !workingConfig.keepLastHitDistance;
                     updateEnableStates();
                 }
 
@@ -368,7 +368,7 @@ public class ReachDisplayConfigScreen extends Screen
                 Text.literal(""),
                 buttonWidget ->
                 {
-                    workingConfig.keepLastDistance = defaultConfig.keepLastDistance;
+                    workingConfig.keepLastHitDistance = defaultConfig.keepLastHitDistance;
                     updateEnableStates();
                 }
 
@@ -1095,7 +1095,7 @@ public class ReachDisplayConfigScreen extends Screen
                     false
             );
 
-            Identifier icon = workingConfig.keepLastDistance ? TOGGLE_ON_ICON : TOGGLE_OFF_ICON;
+            Identifier icon = workingConfig.keepLastHitDistance ? TOGGLE_ON_ICON : TOGGLE_OFF_ICON;
             int iconSize = 16;
             int iconX = kx + keepLastDistanceToggle.getWidth() - iconSize - 4;
             int iconY = ky + (kh - iconSize) / 2;
@@ -1337,7 +1337,7 @@ public class ReachDisplayConfigScreen extends Screen
             c.distanceBands.add(nb);
         }
 
-        c.keepLastDistance = src.keepLastDistance;
+        c.keepLastHitDistance = src.keepLastHitDistance;
         c.resetAfterSeconds = src.resetAfterSeconds;
         c.displayMode = src.displayMode;
 
@@ -1426,7 +1426,7 @@ public class ReachDisplayConfigScreen extends Screen
         }
 
 
-        boolean keepLastDefault = (workingConfig.keepLastDistance == defaultConfig.keepLastDistance);
+        boolean keepLastDefault = (workingConfig.keepLastHitDistance == defaultConfig.keepLastHitDistance);
         if (keepLastDistanceReset != null)
         {
             keepLastDistanceReset.active = !keepLastDefault;
@@ -1449,7 +1449,7 @@ public class ReachDisplayConfigScreen extends Screen
 
         if (resetSecondsRowButton != null)
         {
-            boolean active = !workingConfig.keepLastDistance;
+            boolean active = !workingConfig.keepLastHitDistance;
             resetSecondsRowButton.active = active;
             resetSecondsRowButton.setAlpha(active ? 1.0f : 0.4f);
         }
