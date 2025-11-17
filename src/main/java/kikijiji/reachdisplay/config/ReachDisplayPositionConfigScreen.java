@@ -102,8 +102,15 @@ public class ReachDisplayPositionConfigScreen extends Screen
 
         if (client != null && ReachDisplay.CONFIG != null)
         {
-            String text = "2.88 blocks";
             ReachDisplayConfig config = this.config;
+            double sampleDistance = 2.88;
+            String text = "";
+            switch (config.displayMode)
+            {
+                case NUMBER_ONLY  -> text = String.format("%.2f", sampleDistance);
+                case WITH_BLOCKS  -> text = String.format("%.2f blocks", sampleDistance);
+                case WITH_M       -> text = String.format("%.2f M", sampleDistance);
+            }
 
             int w   = this.textRenderer.getWidth(text);
             int h   = this.textRenderer.fontHeight;

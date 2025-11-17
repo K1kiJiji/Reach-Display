@@ -28,6 +28,35 @@ public class ReachDisplayConfigScreen extends Screen
     private static final Identifier RESET_ICON      = Identifier.of(ReachDisplay.MOD_ID, "textures/gui/reset.png");
     private static final Identifier PREVIEW_BG      = Identifier.of(ReachDisplay.MOD_ID, "textures/gui/preview_bg.png");
 
+
+    private final java.util.List<ButtonWidget> leftButtons = new ArrayList<>();
+    private final java.util.List<Integer> leftButtonBaseY = new ArrayList<>();
+
+    private int scrollOffset = 0;
+    private int maxScroll = 0;
+
+    private ButtonWidget addLeftButton(ButtonWidget.Builder builder, int x, int baseY, int w, int h)
+    {
+        int actualY = baseY - scrollOffset;
+        ButtonWidget btn = this.addDrawableChild(builder.dimensions(x, actualY, w, h).build());
+
+        leftButtons.add(btn);
+        leftButtonBaseY.add(baseY);
+
+        return btn;
+    }
+
+    private void updateLeftButtonPositions()
+    {
+        for (int i = 0; i < leftButtons.size(); i++)
+        {
+            ButtonWidget btn = leftButtons.get(i);
+            int baseY = leftButtonBaseY.get(i);
+            btn.setY(baseY - scrollOffset);
+        }
+    }
+
+
     private ButtonWidget scaleRowButton;
 
     private ButtonWidget reachToggle;
@@ -54,6 +83,16 @@ public class ReachDisplayConfigScreen extends Screen
     private ButtonWidget backgroundColorButton;
     private ButtonWidget backgroundColorReset;
 
+    private ButtonWidget keepLastDistanceToggle;
+    private ButtonWidget keepLastDistanceReset;
+    private ButtonWidget resetSecondsRowButton;
+    private ButtonWidget resetSecondsReset;
+    private boolean editingResetSeconds = false;
+    private String resetSecondsBuffer = "";
+
+    private ButtonWidget displayModeButton;
+    private ButtonWidget displayModeReset;
+
 
     private final int startY = 30;
 
@@ -72,6 +111,8 @@ public class ReachDisplayConfigScreen extends Screen
     protected void init()
     {
         this.clearChildren();
+        leftButtons.clear();
+        leftButtonBaseY.clear();
 
         // 레이아웃
         int buttonHeight = 20;
@@ -110,7 +151,7 @@ public class ReachDisplayConfigScreen extends Screen
 
         // 좌측
         // 표시
-        reachToggle = this.addDrawableChild(ButtonWidget.builder
+        reachToggle = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -119,8 +160,8 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        reachReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        reachReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -131,10 +172,10 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 25;
 
-        shadowToggle = this.addDrawableChild(ButtonWidget.builder
+        shadowToggle = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -142,8 +183,8 @@ public class ReachDisplayConfigScreen extends Screen
                     workingConfig.showShadow = !workingConfig.showShadow;
                     updateEnableStates();
                 }
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        shadowReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        shadowReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -154,10 +195,10 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 25;
 
-        backGroundToggle = this.addDrawableChild(ButtonWidget.builder
+        backGroundToggle = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -166,8 +207,8 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        backGroundReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        backGroundReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -178,11 +219,11 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 45;
 
         // 변환
-        scaleRowButton = this.addDrawableChild(ButtonWidget.builder
+        scaleRowButton = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -201,8 +242,8 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        scaleReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        scaleReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -213,10 +254,10 @@ public class ReachDisplayConfigScreen extends Screen
                     updateEnableStates();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 25;
 
-        positionToggle = this.addDrawableChild(ButtonWidget.builder
+        positionToggle = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -224,11 +265,11 @@ public class ReachDisplayConfigScreen extends Screen
                     MinecraftClient.getInstance().setScreen(new ReachDisplayPositionConfigScreen(this, this.workingConfig));
                 }
 
-        ).dimensions(x - 10, y, fullButtonWidth, buttonHeight).build());
+        ),x - 10, y, fullButtonWidth, buttonHeight);
         y += 45;
 
         // 색
-        mainColorButton = this.addDrawableChild(ButtonWidget.builder
+        mainColorButton = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -243,8 +284,8 @@ public class ReachDisplayConfigScreen extends Screen
                     );
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        mainColorReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        mainColorReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -253,10 +294,10 @@ public class ReachDisplayConfigScreen extends Screen
                     this.init();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 25;
 
-        shadowColorButton = this.addDrawableChild(ButtonWidget.builder
+        shadowColorButton = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -271,8 +312,8 @@ public class ReachDisplayConfigScreen extends Screen
                     );
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        shadowColorReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        shadowColorReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -281,10 +322,10 @@ public class ReachDisplayConfigScreen extends Screen
                     this.init();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
         y += 25;
 
-        backgroundColorButton = this.addDrawableChild(ButtonWidget.builder
+        backgroundColorButton = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -299,8 +340,8 @@ public class ReachDisplayConfigScreen extends Screen
                     );
                 }
 
-        ).dimensions(x - 10, y, buttonWidth, buttonHeight).build());
-        backgroundColorReset = this.addDrawableChild(ButtonWidget.builder
+        ),x - 10, y, buttonWidth, buttonHeight);
+        backgroundColorReset = addLeftButton(ButtonWidget.builder
         (
                 Text.literal(""),
                 buttonWidget ->
@@ -309,8 +350,91 @@ public class ReachDisplayConfigScreen extends Screen
                     this.init();
                 }
 
-        ).dimensions(resetX, y, 20, buttonHeight).build());
+        ),resetX, y, 20, buttonHeight);
+        y += 45;
+
+        keepLastDistanceToggle = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.keepLastDistance = !workingConfig.keepLastDistance;
+                    updateEnableStates();
+                }
+
+        ),x - 10, y, buttonWidth, buttonHeight);
+        keepLastDistanceReset = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.keepLastDistance = defaultConfig.keepLastDistance;
+                    updateEnableStates();
+                }
+
+        ),resetX, y, 20, buttonHeight);
         y += 25;
+
+        resetSecondsRowButton = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    if (!editingResetSeconds)
+                    {
+                        editingResetSeconds = true;
+                        resetSecondsBuffer = Double.toString(workingConfig.resetAfterSeconds);
+                    }
+                    else
+                    {
+                        applyResetSecondsBuffer();
+                        editingResetSeconds = false;
+                    }
+
+                    updateEnableStates();
+                }
+
+        ),x - 10, y, buttonWidth, buttonHeight);
+        resetSecondsReset = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                btn ->
+                {
+                    workingConfig.resetAfterSeconds = defaultConfig.resetAfterSeconds;
+                    editingResetSeconds = false;
+                    resetSecondsBuffer = Double.toString(workingConfig.resetAfterSeconds);
+                    updateEnableStates();
+                }
+
+        ),resetX, y, 20, buttonHeight);
+        y += 45;
+
+        displayModeButton = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    switch (workingConfig.displayMode)
+                    {
+                        case NUMBER_ONLY  -> workingConfig.displayMode = ReachDisplayConfig.DisplayMode.WITH_BLOCKS;
+                        case WITH_BLOCKS  -> workingConfig.displayMode = ReachDisplayConfig.DisplayMode.WITH_M;
+                        case WITH_M       -> workingConfig.displayMode = ReachDisplayConfig.DisplayMode.NUMBER_ONLY;
+                    }
+
+                    updateEnableStates();
+                }
+
+        ),x - 10, y, buttonWidth, buttonHeight);
+        displayModeReset = addLeftButton(ButtonWidget.builder
+        (
+                Text.literal(""),
+                buttonWidget ->
+                {
+                    workingConfig.displayMode = defaultConfig.displayMode;
+                    updateEnableStates();
+                }
+
+        ),resetX, y, 20, buttonHeight);
 
 
         // 우측 하단
@@ -332,6 +456,8 @@ public class ReachDisplayConfigScreen extends Screen
                 Text.literal("Save"),
                 buttonWidget ->
                 {
+                    if (editingScale) applyScaleBuffer();
+                    if (editingResetSeconds) applyResetSecondsBuffer();
                     ReachDisplay.CONFIG = copyConfig(this.workingConfig);
                     ReachDisplayConfigManager.save(ReachDisplay.CONFIG);
                 }
@@ -344,6 +470,8 @@ public class ReachDisplayConfigScreen extends Screen
                 Text.literal("Done"),
                 buttonWidget ->
                 {
+                    if (editingScale) applyScaleBuffer();
+                    if (editingResetSeconds) applyResetSecondsBuffer();
                     ReachDisplay.CONFIG = copyConfig(this.workingConfig);
                     ReachDisplayConfigManager.save(ReachDisplay.CONFIG);
                     MinecraftClient.getInstance().setScreen(parent);
@@ -351,6 +479,12 @@ public class ReachDisplayConfigScreen extends Screen
 
         ).dimensions(doneX, doneY, doneWidth, buttonHeight).build());
 
+        int visibleHeight = this.height - startY - 80;
+
+        maxScroll = Math.max(0, y - (startY + visibleHeight));
+        if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+
+        updateLeftButtonPositions();
         updateEnableStates();
     }
 
@@ -412,29 +546,10 @@ public class ReachDisplayConfigScreen extends Screen
         /* ----- HUD 텍스트 미리보기 ----- */
         // 샘플 거리
         double sampleDistance = 2.88;
-        String numberText = PREVIEW_FORMAT.format(sampleDistance);
-
-        // displayMode
-        String text = numberText + " blocks";
+        String text = formatSampleText(sampleDistance, config.displayMode);
 
         int textWidth  = this.textRenderer.getWidth(text);
         int textHeight = this.textRenderer.fontHeight;
-
-        if (!config.showReach)
-        {
-            int descY = previewY + previewH + 6;
-            ctx.drawText
-            (
-                    this.textRenderer,
-                    Text.literal("Preview disabled (Enable Reach is OFF)"),
-                    rightInnerX,
-                    descY,
-                    0xFF888888,
-                    false
-            );
-
-            return;
-        }
 
         float scale = Math.max(0.1f, config.scale / 100.0f);
 
@@ -523,14 +638,42 @@ public class ReachDisplayConfigScreen extends Screen
         int leftWidth = centerX + this.width / 6;
         int leftCenterX = leftWidth / 2;
 
+        int scrollY = scrollOffset;
+
+        int appearanceY = startY + 25 - scrollY;
+        int transformY  = startY + 125 - scrollY;
+        int colorY      = startY + 195 - scrollY;
+        int keepY       = startY + 290 - scrollY;
+        int displayY    = startY + 360 - scrollY;
+
         // 배경
         this.renderBackground(ctx, mouseX, mouseY, delta);
 
-        ctx.fill(leftWidth, this.height, this.width, 45, 0x80000000);
-
         // 버튼
         super.render(ctx, mouseX, mouseY, delta);
+        ctx.fill(leftWidth, 45, this.width, this.height, 0x50000000);
         renderPreview(ctx);
+
+        // 헤더 텍스트
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, appearanceY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, appearanceY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("Appearance"), leftCenterX - this.textRenderer.getWidth(Text.literal("Appearance")) / 2, appearanceY, 0xFFFFFF, false);
+
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, transformY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, transformY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("Transform"), leftCenterX - this.textRenderer.getWidth(Text.literal("Transform")) / 2, transformY, 0xFFFFFF, false);
+
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, colorY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, colorY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("Color"), leftCenterX - this.textRenderer.getWidth(Text.literal("Color")) / 2, colorY, 0xFFFFFF, false);
+
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, keepY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, keepY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("Keep Last Distance"), leftCenterX - this.textRenderer.getWidth(Text.literal("Keep Last Distance")) / 2, keepY, 0xFFFFFF, false);
+
+        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, displayY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, displayY, 0xFFFFFF, false);
+        ctx.drawText(this.textRenderer, Text.literal("Display Mod"), leftCenterX - this.textRenderer.getWidth(Text.literal("Display Mod")) / 2, displayY, 0xFFFFFF, false);
 
         // 버튼 글씨
         if (reachToggle != null)
@@ -936,7 +1079,208 @@ public class ReachDisplayConfigScreen extends Screen
                     color
             );
         }
+        if (keepLastDistanceToggle != null)
+        {
+            int kx = keepLastDistanceToggle.getX();
+            int ky = keepLastDistanceToggle.getY();
+            int kh = keepLastDistanceToggle.getHeight();
 
+            String label = "Keep Last Distance";
+            ctx.drawText(
+                    this.textRenderer,
+                    label,
+                    kx + 4,
+                    ky + (kh - this.textRenderer.fontHeight) / 2,
+                    0xFFFFFFFF,
+                    false
+            );
+
+            Identifier icon = workingConfig.keepLastDistance ? TOGGLE_ON_ICON : TOGGLE_OFF_ICON;
+            int iconSize = 16;
+            int iconX = kx + keepLastDistanceToggle.getWidth() - iconSize - 4;
+            int iconY = ky + (kh - iconSize) / 2;
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    icon,
+                    iconX, iconY,
+                    0, 0,
+                    iconSize, iconSize,
+                    iconSize, iconSize
+            );
+        }
+        if (keepLastDistanceReset != null)
+        {
+            int kldx = keepLastDistanceReset.getX();
+            int kldy = keepLastDistanceReset.getY();
+            int kldw = keepLastDistanceReset.getWidth();
+            int kldh = keepLastDistanceReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = kldx + (kldw - iconSize) / 2;
+            int iconY = kldy + (kldh - iconSize) / 2;
+
+            float alpha = keepLastDistanceReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
+        if (resetSecondsRowButton != null)
+        {
+            int rx = resetSecondsRowButton.getX();
+            int ry = resetSecondsRowButton.getY();
+            int rh = resetSecondsRowButton.getHeight();
+
+            boolean active = resetSecondsRowButton.active;
+            float alpha = active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            String label = "Reset After (sec)";
+            ctx.drawText
+            (
+                    this.textRenderer,
+                    label,
+                    rx + 4,
+                    ry + (rh - this.textRenderer.fontHeight) / 2,
+                    color,
+                    false
+            );
+
+            String valueText = editingResetSeconds ? resetSecondsBuffer : String.format("%.1f", workingConfig.resetAfterSeconds);
+
+            int buttonWidth = leftWidth - 40;
+            buttonWidth = Math.max(100, buttonWidth);
+            int x = leftCenterX - buttonWidth / 2;
+            int resetX = x - 10 + buttonWidth;
+            int valueWidth = this.textRenderer.getWidth(valueText);
+            int valueX = resetX - 4 - valueWidth;
+            int valueY = ry + (rh - this.textRenderer.fontHeight) / 2;
+
+            ctx.drawText
+            (
+                    this.textRenderer,
+                    valueText,
+                    valueX,
+                    valueY,
+                    color,
+                    false
+            );
+
+            if (editingResetSeconds)
+            {
+                int underlineY = valueY + this.textRenderer.fontHeight + 1;
+                ctx.fill(valueX, underlineY - 2, valueX + valueWidth, underlineY - 1, color);
+            }
+        }
+        if (resetSecondsReset != null)
+        {
+            int rsx = resetSecondsReset.getX();
+            int rsy = resetSecondsReset.getY();
+            int rsw = resetSecondsReset.getWidth();
+            int rsh = resetSecondsReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = rsx + (rsw - iconSize) / 2;
+            int iconY = rsy + (rsh - iconSize) / 2;
+
+            float alpha = resetSecondsReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
+        if (displayModeButton != null)
+        {
+            int dx = displayModeButton.getX();
+            int dy = displayModeButton.getY();
+            int dh = displayModeButton.getHeight();
+
+            String label = "Display Format";
+            ctx.drawText
+            (
+                    this.textRenderer,
+                    label,
+                    dx + 4,
+                    dy + (dh - this.textRenderer.fontHeight) / 2,
+                    0xFFFFFFFF,
+                    false
+            );
+
+            String modeText = switch (workingConfig.displayMode)
+            {
+                case NUMBER_ONLY  -> "2.88";
+                case WITH_BLOCKS  -> "2.88 blocks";
+                case WITH_M       -> "2.88 M";
+            };
+
+            int w = this.textRenderer.getWidth(modeText);
+            int valueX = dx + displayModeButton.getWidth() - w - 4;
+            int valueY = dy + (dh - this.textRenderer.fontHeight) / 2;
+
+            ctx.drawText
+            (
+                    this.textRenderer,
+                    modeText,
+                    valueX,
+                    valueY,
+                    0xFFFFFFFF,
+                    false
+            );
+        }
+        if (displayModeReset != null)
+        {
+            int dmx = displayModeReset.getX();
+            int dmy = displayModeReset.getY();
+            int dmw = displayModeReset.getWidth();
+            int dmh = displayModeReset.getHeight();
+            int iconSize = 16;
+
+            int iconX = dmx + (dmw - iconSize) / 2;
+            int iconY = dmy + (dmh - iconSize) / 2;
+
+            float alpha = displayModeReset.active ? 1.0f : 0.4f;
+            int base = 0xFFFFFF;
+
+            int a = (int)(alpha * 255.0f) & 0xFF;
+            int color = (a << 24) | base;
+
+            ctx.drawTexture
+            (
+                    RenderLayer::getGuiTextured,
+                    RESET_ICON,
+                    iconX, iconY,
+                    0.0f, 0.0f,
+                    iconSize, iconSize,
+                    iconSize, iconSize,
+                    color
+            );
+        }
 
         // 제목
         ctx.drawCenteredTextWithShadow
@@ -956,18 +1300,7 @@ public class ReachDisplayConfigScreen extends Screen
         ctx.fill(leftWidth - 1, this.height, leftWidth, 45, 0xFFFFFFFF);
         ctx.fill(leftWidth, this.height, leftWidth + 1, 45, 0xFF000000);
 
-        // 헤더 텍스트
-        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 25, 0xFFFFFF, true);
-        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 25, 0xFFFFFF, true);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Appearance"), leftCenterX, startY + 25, 0xFFFFFF);
-
-        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 125, 0xFFFFFF, true);
-        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 125, 0xFFFFFF, true);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Transform"), leftCenterX, startY + 125, 0xFFFFFF);
-
-        ctx.drawText(this.textRenderer, Text.literal("▼"), 10, startY + 195, 0xFFFFFF, true);
-        ctx.drawText(this.textRenderer, Text.literal("▼"), leftWidth - 20, startY + 195, 0xFFFFFF, true);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Color"), leftCenterX, startY + 195, 0xFFFFFF);
+        ctx.fill(0, 0, this.width, startY + 14, 0xFF000000);
     }
 
 
@@ -1091,10 +1424,38 @@ public class ReachDisplayConfigScreen extends Screen
             backgroundColorReset.active = !bgColorDefault;
             backgroundColorReset.setAlpha(bgColorDefault ? 0.4f : 1.0f);
         }
+
+
+        boolean keepLastDefault = (workingConfig.keepLastDistance == defaultConfig.keepLastDistance);
+        if (keepLastDistanceReset != null)
+        {
+            keepLastDistanceReset.active = !keepLastDefault;
+            keepLastDistanceReset.setAlpha(keepLastDefault ? 0.4f : 1.0f);
+        }
+
+        boolean resetSecDefault = (workingConfig.resetAfterSeconds == defaultConfig.resetAfterSeconds);
+        if (resetSecondsReset != null)
+        {
+            resetSecondsReset.active = !resetSecDefault;
+            resetSecondsReset.setAlpha(resetSecDefault ? 0.4f : 1.0f);
+        }
+
+        boolean formatDefault = (workingConfig.displayMode == defaultConfig.displayMode);
+        if (displayModeReset != null)
+        {
+            displayModeReset.active = !formatDefault;
+            displayModeReset.setAlpha(formatDefault ? 0.4f : 1.0f);
+        }
+
+        if (resetSecondsRowButton != null)
+        {
+            boolean active = !workingConfig.keepLastDistance;
+            resetSecondsRowButton.active = active;
+            resetSecondsRowButton.setAlpha(active ? 1.0f : 0.4f);
+        }
     }
 
 
-    /* ----- 키보드 입력 ----- */
     private void applyScaleBuffer()
     {
         String txt = scaleEditBuffer.trim();
@@ -1113,6 +1474,38 @@ public class ReachDisplayConfigScreen extends Screen
         }
     }
 
+    private void applyResetSecondsBuffer()
+    {
+        String txt = resetSecondsBuffer.trim();
+        if (!txt.isEmpty())
+        {
+            try
+            {
+                double value = Double.parseDouble(txt);
+                value = Math.max(0.0, Math.min(600.0, value));
+                workingConfig.resetAfterSeconds = value;
+            }
+
+            catch (NumberFormatException ignored)
+            {
+                // ignore
+            }
+        }
+    }
+
+    private String formatSampleText(double distance, ReachDisplayConfig.DisplayMode mode)
+    {
+        String numberText = PREVIEW_FORMAT.format(distance);
+        return switch (mode)
+        {
+            case NUMBER_ONLY  -> numberText;
+            case WITH_BLOCKS  -> numberText + " blocks";
+            case WITH_M       -> numberText + " M";
+        };
+    }
+
+
+    /* ----- 키보드 입력 ----- */
     @Override
     public boolean charTyped(char chr, int modifiers)
     {
@@ -1128,6 +1521,19 @@ public class ReachDisplayConfigScreen extends Screen
                 }
             }
 
+            return true;
+        }
+        else if (editingResetSeconds)
+        {
+            if (Character.isDigit(chr) || chr == '.')
+            {
+                if (resetSecondsBuffer.length() < 6)
+                {
+                    resetSecondsBuffer += chr;
+                    applyResetSecondsBuffer();
+                    updateEnableStates();
+                }
+            }
             return true;
         }
 
@@ -1166,6 +1572,35 @@ public class ReachDisplayConfigScreen extends Screen
 
             return true;
         }
+        else if (editingResetSeconds)
+        {
+            // Backspace
+            if (keyCode == 259 && !resetSecondsBuffer.isEmpty())
+            {
+                resetSecondsBuffer = resetSecondsBuffer.substring(0, resetSecondsBuffer.length() - 1);
+                applyResetSecondsBuffer();
+                updateEnableStates();
+                return true;
+            }
+            // Enter / Numpad Enter
+            if (keyCode == 257 || keyCode == 335)
+            {
+                applyResetSecondsBuffer();
+                editingResetSeconds = false;
+                updateEnableStates();
+                return true;
+            }
+            // Esc
+            if (keyCode == 256)
+            {
+                editingResetSeconds = false;
+                resetSecondsBuffer = Double.toString(workingConfig.resetAfterSeconds);
+                updateEnableStates();
+                return true;
+            }
+
+            return true;
+        }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -1173,6 +1608,15 @@ public class ReachDisplayConfigScreen extends Screen
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button)
     {
+        int centerX   = this.width / 2;
+        int leftWidth = centerX + this.width / 6;
+        int clipTop   = startY + 18;
+
+        if (mouseX < leftWidth && mouseY < clipTop)
+        {
+            return true;
+        }
+
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 
         if (editingScale && scaleRowButton != null)
@@ -1191,6 +1635,39 @@ public class ReachDisplayConfigScreen extends Screen
             }
         }
 
+        if (editingResetSeconds && resetSecondsRowButton != null)
+        {
+            int rx = resetSecondsRowButton.getX();
+            int ry = resetSecondsRowButton.getY();
+            int rw = resetSecondsRowButton.getWidth();
+            int rh = resetSecondsRowButton.getHeight();
+
+            boolean inside = mouseX >= rx && mouseX < rx + rw && mouseY >= ry && mouseY < ry + rh;
+            if (!inside)
+            {
+                editingResetSeconds = false;
+                resetSecondsBuffer = Double.toString(workingConfig.resetAfterSeconds);
+                updateEnableStates();
+            }
+        }
+
         return handled;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount)
+    {
+        if (verticalAmount != 0)
+        {
+            int delta = (int)(verticalAmount * -10);
+
+            scrollOffset += delta;
+            scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
+
+            updateLeftButtonPositions();
+            return true;
+        }
+
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 }
