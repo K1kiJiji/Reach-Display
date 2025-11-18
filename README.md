@@ -10,8 +10,6 @@ Great for PvP, or simply understanding how far you can interact.
 
 Fully client-side. No server required.
 
----
-
 ## ✨ Features
 - 📏 Shows your current reach distance
 - 🎨 Fully customizable colors (text / shadow / background)
@@ -21,8 +19,6 @@ Fully client-side. No server required.
   - `2.88 blocks`
   - `2.88 M`
 - 🧼 Optional: keep-last-distance timer
-
----
 
 ## 🖼️ Screenshots
 ### 🎮 In-Game Preview
@@ -35,16 +31,12 @@ Fully client-side. No server required.
   <img src="docs/assets/config.png" width="800">
 </p>
 
----
-
 ## 📦 Installation
 Requires:
 
 - **Fabric Loader**
 - **Fabric API**
 - *(Optional)* **Mod Menu** — to easily open the configuration screen
-
----
 
 ## 📝 License
 This project is licensed under the **MIT License**.
