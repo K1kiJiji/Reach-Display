@@ -2,11 +2,14 @@ package kikijiji.reachdisplay.config;
 
 
 import net.minecraft.text.Text;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+
 import kikijiji.reachdisplay.ReachDisplay;
+import net.minecraft.util.Formatting;
 
 
 public class ReachDisplayPositionConfigScreen extends Screen
@@ -23,25 +26,29 @@ public class ReachDisplayPositionConfigScreen extends Screen
     private int startOffsetY;
     private boolean dragging = false;
 
+
+    /* ----- 제목 ----- */
     public ReachDisplayPositionConfigScreen(Screen parent, ReachDisplayConfig config)
     {
-        super(Text.literal("Adjust Reach Position"));
+        super(Text.literal("Adjust Reach Position").formatted(Formatting.BOLD));
+
         this.parent = parent;
+
         this.config = config;
+
         this.tempOffsetX = config.offsetX;
         this.tempOffsetY = config.offsetY;
     }
 
+
+    /* ----- 준비 ----- */
     @Override
     protected void init()
     {
         this.clearChildren();
 
-        int buttonHeight = 20;
+        int x = (this.width - 3 * 80 + 2 * 8) / 2;
         int y = this.height - 40;
-
-        int widthTotal = 3 * 80 + 2 * 8;
-        int x = (this.width - widthTotal) / 2;
 
         // Reset
         this.addDrawableChild(ButtonWidget.builder
@@ -53,8 +60,7 @@ public class ReachDisplayPositionConfigScreen extends Screen
                     tempOffsetY = 0;
                 }
 
-        ).dimensions(x, y, 80, buttonHeight).build());
-
+        ).dimensions(x, y, 80, 20).build());
         // Save
         this.addDrawableChild(ButtonWidget.builder
         (
@@ -65,8 +71,7 @@ public class ReachDisplayPositionConfigScreen extends Screen
                     config.offsetY = tempOffsetY;
                 }
 
-        ).dimensions(x + 80 + 8, y, 80, buttonHeight).build());
-
+        ).dimensions(x + 80 + 8, y, 80, 20).build());
         // Done
         this.addDrawableChild(ButtonWidget.builder
         (
@@ -78,107 +83,124 @@ public class ReachDisplayPositionConfigScreen extends Screen
                     MinecraftClient.getInstance().setScreen(parent);
                 }
 
-        ).dimensions(x + (80 + 8) * 2, y, 80, buttonHeight).build());
+        ).dimensions(x + (80 + 8) * 2, y, 80, 20).build());
     }
 
+
+    /* ----- 표시 ----- */
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta)
+    public void render(DrawContext drawContext, int mouseX, int mouseY, float delta)
     {
-        this.renderBackground(ctx, mouseX, mouseY, delta);
+        this.renderBackground(drawContext, mouseX, mouseY, delta);
         MinecraftClient client = MinecraftClient.getInstance();
 
         // 하단 버튼
-        super.render(ctx, mouseX, mouseY, delta);
+        super.render(drawContext, mouseX, mouseY, delta);
 
-        // 안내 텍스트
-        ctx.drawCenteredTextWithShadow
+        // 제목
+        drawContext.drawCenteredTextWithShadow
         (
                 this.textRenderer,
-                Text.literal("Position Preview"),
+                this.title,
                 this.width / 2,
                 20,
                 0xFFFFFF
         );
 
+
+        // HUD 표시
         if (client != null && ReachDisplay.CONFIG != null)
         {
             ReachDisplayConfig config = this.config;
-            double sampleDistance = 2.88;
+
+            // 표시 포맷
             String text = "";
             switch (config.displayMode)
             {
-                case NUMBER_ONLY  -> text = String.format("%.2f", sampleDistance);
-                case WITH_BLOCKS  -> text = String.format("%.2f blocks", sampleDistance);
-                case WITH_M       -> text = String.format("%.2f M", sampleDistance);
+                case NUMBER_ONLY  -> text = String.format("%.2f", 2.88);
+                case WITH_BLOCKS  -> text = String.format("%.2f blocks", 2.88);
+                case WITH_M       -> text = String.format("%.2f M", 2.88);
             }
 
-            int w   = this.textRenderer.getWidth(text);
-            int h   = this.textRenderer.fontHeight;
-            int pad = config.showBackground ? 2 : 0;
-
+            // 크기
             float scale = Math.max(0.1f, config.scale / 100.0f);
 
-            int anchorX = 4 + tempOffsetX;
-            int anchorY = 4 + tempOffsetY;
-
-            var matrices = ctx.getMatrices();
+            var matrices = drawContext.getMatrices();
             matrices.push();
-
-            matrices.translate(anchorX, anchorY, 0);
+            matrices.translate(4 + tempOffsetX, 4 + tempOffsetY, 0);
             matrices.scale(scale, scale, 1.0f);
 
-            int x = 0;
-            int y = 0;
+            int padding = config.showBackground ? 2 : 0;
 
-            // 배경 박스
+            // 배경
             if (config.showBackground)
             {
-                int x1 = x - pad;
-                int y1 = y - pad;
-                int x2 = x + w + pad;
-                int y2 = y + h + pad;
-                ctx.fill(x1, y1, x2, y2, config.backgroundColor);
+                int x1 = -padding;
+                int y1 = -padding;
+                int x2 = this.textRenderer.getWidth(text) + padding;
+                int y2 = this.textRenderer.fontHeight + padding;
+                drawContext.fill
+                (
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        config.backgroundColor
+                );
             }
-
             // 그림자
             if (config.showShadow)
             {
-                ctx.drawText(this.textRenderer, text, x + 1, y + 1, config.shadowColor, false);
+                drawContext.drawText
+                (
+                        this.textRenderer,
+                        text,
+                        1,
+                        1,
+                        config.shadowColor,
+                        false
+                );
             }
-
-            // 메인 텍스트
+            // 텍스트
             if (config.showReach)
             {
-                ctx.drawText(this.textRenderer, text, x, y, config.mainColor, false);
+                drawContext.drawText
+                (
+                        this.textRenderer,
+                        text,
+                        0,
+                        0,
+                        config.textColor,
+                        false
+                );
             }
 
             matrices.pop();
         }
     }
 
+
+    /* ----- 마우스 클릭 ----- */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button)
     {
         if (button == 0)
         {
             String text = "2.88 blocks";
-            ReachDisplayConfig cfg = this.config;
-            int w   = this.textRenderer.getWidth(text);
-            int h   = this.textRenderer.fontHeight;
-            int pad = cfg.showBackground ? 2 : 0;
+            ReachDisplayConfig config = this.config;
 
-            int hudW = w + pad * 2;
-            int hudH = h + pad * 2;
+            int padding = config.showBackground ? 2 : 0;
 
-            float scale = Math.max(0.1f, cfg.scale / 100.0f);
-            int scaledW = (int)Math.ceil(hudW * scale);
-            int scaledH = (int)Math.ceil(hudH * scale);
+            int hudW = this.textRenderer.getWidth(text) + padding * 2;
+            int hudH = this.textRenderer.fontHeight + padding * 2;
+
+            int scaledW = (int)Math.ceil(hudW * Math.max(0.1f, config.scale / 100.0f));
+            int scaledH = (int)Math.ceil(hudH * Math.max(0.1f, config.scale / 100.0f));
 
             int anchorX = 4 + tempOffsetX;
             int anchorY = 4 + tempOffsetY;
 
             boolean inside = mouseX >= anchorX && mouseX < anchorX + scaledW && mouseY >= anchorY && mouseY < anchorY + scaledH;
-
             if (inside)
             {
                 dragging = true;
@@ -193,26 +215,25 @@ public class ReachDisplayPositionConfigScreen extends Screen
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
+    /* ----- 마우스 드래그 ----- */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy)
     {
         if (dragging && button == 0)
         {
+            ReachDisplayConfig config = this.config;
+            String text = "2.88 blocks";
+
+            int padding = config.showBackground ? 2 : 0;
+
             int rawOffsetX = startOffsetX + (int)(mouseX - dragStartX);
             int rawOffsetY = startOffsetY + (int)(mouseY - dragStartY);
 
-            ReachDisplayConfig cfg = this.config;
-            String text = "2.88 blocks";
-            int w   = this.textRenderer.getWidth(text);
-            int h   = this.textRenderer.fontHeight;
-            int pad = cfg.showBackground ? 2 : 0;
+            int hudW = this.textRenderer.getWidth(text) + padding * 2;
+            int hudH = this.textRenderer.fontHeight + padding * 2;
 
-            int hudW = w + pad * 2;
-            int hudH = h + pad * 2;
-
-            float scale = Math.max(0.1f, cfg.scale / 100.0f);
-            int scaledW = (int) Math.ceil(hudW * scale);
-            int scaledH = (int) Math.ceil(hudH * scale);
+            int scaledW = (int) Math.ceil(hudW * Math.max(0.1f, config.scale / 100.0f));
+            int scaledH = (int) Math.ceil(hudH * Math.max(0.1f, config.scale / 100.0f));
 
             int anchorX = 4 + rawOffsetX;
             int anchorY = 4 + rawOffsetY;
@@ -240,6 +261,7 @@ public class ReachDisplayPositionConfigScreen extends Screen
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
 
+    /* ----- 마우스 릴리즈 ----- */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button)
     {
@@ -251,6 +273,8 @@ public class ReachDisplayPositionConfigScreen extends Screen
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+
+    /* ----- ESC ----- */
     @Override
     public boolean shouldCloseOnEsc()
     {

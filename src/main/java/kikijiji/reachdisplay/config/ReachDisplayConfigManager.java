@@ -3,12 +3,17 @@ package kikijiji.reachdisplay.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import java.io.Reader;
 import java.io.Writer;
 import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Files;
+
 import net.fabricmc.loader.api.FabricLoader;
+
+import kikijiji.reachdisplay.ReachDisplay;
 
 
 public class ReachDisplayConfigManager
@@ -17,7 +22,7 @@ public class ReachDisplayConfigManager
     private static final String FILE_NAME = "reach-display.json";
 
 
-    // 불러오기
+    /* ----- 불러오기 ----- */
     public static ReachDisplayConfig load()
     {
         Path configDir  = FabricLoader.getInstance().getConfigDir();
@@ -35,7 +40,7 @@ public class ReachDisplayConfigManager
             }
             catch (IOException exception)
             {
-                exception.printStackTrace();
+                ReachDisplay.LOGGER.error("Failed to load ReachDisplay config from {}", configPath, exception);
             }
         }
 
@@ -44,18 +49,19 @@ public class ReachDisplayConfigManager
         return config;
     }
 
-    // 저장
+    /* ----- 저장 ----- */
     public static void save(ReachDisplayConfig config)
     {
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+        Path configPath = configDir.resolve(FILE_NAME);
+
         try
         {
-            Path configDir = FabricLoader.getInstance().getConfigDir();
             if (!Files.exists(configDir))
             {
                 Files.createDirectories(configDir);
             }
 
-            Path configPath = configDir.resolve(FILE_NAME);
             try (Writer writer = Files.newBufferedWriter(configPath))
             {
                 GSON.toJson(config, writer);
@@ -63,7 +69,7 @@ public class ReachDisplayConfigManager
         }
         catch (IOException exception)
         {
-            exception.printStackTrace();
+            ReachDisplay.LOGGER.error("Failed to save ReachDisplay config to {}", configPath, exception);
         }
     }
 }
